@@ -1,0 +1,65 @@
+\documentclass[12pt]{article}
+ 
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amsthm,amssymb,mathtools,amsfonts}
+\usepackage{graphicx}
+ 
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\defeq}{\vcentcolon=}
+\newcommand{\eqdef}{=\vcentcolon}
+\newcommand{\overbar}[1]{\mkern 1.5mu\overline{\mkern-1.5mu#1\mkern-1.5mu}\mkern 1.5mu}
+
+\newenvironment{theorem}[2][Theorem]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{lemma}[2][Lemma]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{exercise}[2][Exercise]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{problem}[2][Problem]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{question}[2][Question]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{corollary}[2][Corollary]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+ 
+\begin{document}
+Another method for generating and then recovering low rank or sparse matrices is with the use of adaptive thresholding. Zarmehi and Marvasti's paper describes the use of an iterative algorithm that utilizes a thresholding operator to obtain the low rank and sparse components quickly. A common way to perform low rank generation with low runtime is through the use of the $\ell_1$ norm, however this algorithm proposes to instead to produce an error term $E^* = X-X^*$ by forcing the the low rank and sparse terms to satisfy: $X = X^*+E^*$ using an adaptive threshold of $\tau_k = \beta \sigma_1 e^{-\alpha k}$, then our steps will be:
+\begin{align*}
+X^* &= \mathcal{T}_{\tau_k}(X^*_{i-1})\\
+E^* &= X - X^* \\
+E_i^* &= \mathcal{D}_{\tau_k}(E) \\
+X^*_i &= X - E_i
+\end{align*}
+Where $\mathcal{T}_{\tau_k}(Y)$ and $\mathcal{D}_{\tau_k}(Y)$ of some $Y = U\Sigma V^T$ where $Y \in \R^{m \times n}$:
+\begin{align*}
+\mathcal{T}_{\tau_k}(Y) &= U \mathcal{D}_{\tau_k}(\Sigma) V^T\\
+\mathcal{D}_{\tau_k}(Y) &= [\max\{ (x_ij - \tau_k),0 \}]) \text{ } \forall 0 \le i,j \le m,n
+\end{align*}
+Through this papers research on this algorithm showed that it outperformed the IALM method in accuracy and run-time and was faster when attempting a perfect recovery making this algorithm ideal for generating a low rank approximation.\\
+
+In some cases for low rank recovery there is the issue of arbitrary outliers which make it difficult to approximate a matrix. Li, Chi, Zhang, and Liang's paper introduce a method to improve on the idea of gradient descent that is sensitive to such outliers. They propose the use of a median truncated gradient descent where truncation is performed to rule out contributions of samples that differ greatly from the sample median of adaptively measured residuals. This is used in the specific case where the that can be decomposed into low rank factors i.e $M = XY^T$ where we instead attempt to recover the factor matrices of low rank. The proposed algorithm uses a minimization an oracle loss function that reduces the quadratic loss function over the index of clean measurements $S^c$  added to a regularization term: 
+\begin{align*}
+f_i(U,V) &= \dfrac{1}{4m}(y_i - \mathcal{A}_i(UV^T))^2 \\
+g(U,V) &= \dfrac{\lambda}{4}||U^TU-VTV||^2_F \\
+h(U,V) &= \sum_{i\in S^c} f_i(U,V) + g(U,V)
+\end{align*}
+As minimizing $h(U,V)$ cannot be done directly a gradient descent strategy where only a subset of samples contribute to the search direction is used to generate the approximations of $U,V$:
+\begin{align*}
+U_{t+1} = U_t - \dfrac{\mu_t}{||U_0||^2} \Delta_U h_t(U_t,V_t) \\
+V_{t+1} = V_t - \dfrac{\mu_t}{||V_0||^2} \Delta_U h_t(U_t,V_t)
+\end{align*}
+where we iterate through samples in the set $\mathcal{E}^t = \{i|r_i^t|\leq \alpha_h \text{med} \{|r^t|\} \}$ which ensures that we only sample where the absolute residuals are not too far deviated from the sample median of residuals included in the gradient update. This allows for a theoretical guarantee of higher performance using this algorithm. In this paper the authors also provide a proof of linear convergence for the low rank recovery. This method is ideal to used in scenarios where the matrix can be decomposed into low rank parts and where the presence of outliers needs to be diminished in the overall approximation. \\
+
+In a paper by Li and Chen they attempt to perform matrix recovery from rank 1 projection measurements by establishing a identifiability condition that guarantees the exact recovery of a low rank matrix through $q$ minimization: $\min_X||\mathcal{A}(X) -b||^q_q$ for $q\in [0,1]$ and through Schatten-$p$ minimization: $\min_X||X||^o_{S_p}$ for $p\in [0,1]$. They propose to take the rank one projection method introduced by Cai and Zhang with the intrictucion of a $\ell_q-$RUB condition for low rank matrix recovery which is a natural generalization of RUB condition used by Cai and Zhang. The idea is that $\ell_q $ restricted Uniform Boundness is satitsified when for the linear map $\mathcal{A}:\R^{m\times n} \to \R^L$ there xisits uniform constants $C_1,C_2$ such that:\[ C_1||X||^q_{S_2} \leq ||\mathcal{A}(X)||^q_q/L \leq C_2||X||^q_{S_2}\]
+Using this identifiability condition when solving the low rank subject to $\mathcal{A}(X) = b$ they claim to guarantee exact recovery through low rank recovery through nuclear norm, Schatten-$p$, and least-$q$ minimization thus improving on these ideas. They go on to show that with high probability rank one projection with random projections with $L \ge Cr(m+n)$is enough to have stable and robust recovery for all matrices of rank $r$. This shows the continued improvement of different approaches ot low rank recovery to find ways to ensure the approximation and recovery allows for extremely low error. 
+
+
+
+
+\end{document}
+
+
